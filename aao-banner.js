@@ -133,11 +133,17 @@ class AaoSiteHeader extends HTMLElement {
         .dismiss {
           background: none; border: none; cursor: pointer;
           color: rgba(255,255,255,0.3);
-          display: flex; align-items: center;
+          display: flex; align-items: center; justify-content: center;
+          min-width: 44px; min-height: 44px;
           padding: 4px; border-radius: 4px; margin-left: 2px; flex-shrink: 0; line-height: 1;
         }
         .dismiss:hover { color: rgba(255,255,255,0.8); }
         .dismiss:focus-visible { outline: 2px solid #7cb9d4; outline-offset: 2px; color: rgba(255,255,255,0.8); }
+        @media (max-width: 479px) {
+          .root { justify-content: center; padding: 10px 16px; }
+          .brand { width: 100%; justify-content: center; }
+          .actions { width: 100%; justify-content: center; }
+        }
       </style>
       <div class="root" role="region" aria-label="All Aboard Ohio Developer Program">
         <div class="brand">
@@ -181,7 +187,7 @@ class AaoSiteHeader extends HTMLElement {
         a:focus-visible { outline: 2px solid #7cb9d4; outline-offset: 2px; border-radius: 2px; }
         .dismiss {
           position: absolute;
-          right: 10px;
+          right: 4px;
           top: 50%;
           transform: translateY(-50%);
           background: none;
@@ -189,13 +195,17 @@ class AaoSiteHeader extends HTMLElement {
           cursor: pointer;
           color: rgba(255,255,255,0.25);
           display: flex;
-          align-items: center;
+          align-items: center; justify-content: center;
+          min-width: 44px; min-height: 44px;
           padding: 4px;
           border-radius: 4px;
           line-height: 1;
         }
         .dismiss:hover { color: rgba(255,255,255,0.75); }
         .dismiss:focus-visible { outline: 2px solid #7cb9d4; outline-offset: 2px; color: rgba(255,255,255,0.75); }
+        @media (max-width: 479px) {
+          .root { padding: 6px 44px 6px 12px; }
+        }
       </style>
       <div class="root" role="region" aria-label="All Aboard Ohio Developer Program">
         <span>Part of the <strong>All Aboard Ohio Developer Program</strong></span>
@@ -319,7 +329,8 @@ class AaoNotification extends HTMLElement {
         a:hover { text-decoration: underline; }
         .dismiss {
           background: none; border: none; cursor: pointer;
-          color: ${theme.dismiss}; display: flex; align-items: center;
+          color: ${theme.dismiss}; display: flex; align-items: center; justify-content: center;
+          min-width: 44px; min-height: 44px;
           padding: 4px; border-radius: 4px; flex-shrink: 0; margin-left: 6px; line-height: 1;
         }
         .dismiss:hover { color: ${theme.text}; }

@@ -274,9 +274,10 @@ class AaoSiteHeader extends HTMLElement {
         a { color:#7cb9d4; font-weight:600; text-decoration:none; white-space:nowrap; }
         a:hover { text-decoration:underline; }
         a:focus-visible { outline:2px solid #7cb9d4; outline-offset:2px; border-radius:2px; }
-        .dismiss { position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:rgba(255,255,255,.25); display:flex; align-items:center; padding:4px; border-radius:4px; line-height:1; }
+        .dismiss { position:absolute; right:4px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:rgba(255,255,255,.25); display:flex; align-items:center; justify-content:center; min-width:44px; min-height:44px; padding:4px; border-radius:4px; line-height:1; }
         .dismiss:hover { color:rgba(255,255,255,.75); }
         .dismiss:focus-visible { outline:2px solid #7cb9d4; outline-offset:2px; color:rgba(255,255,255,.75); }
+        @media (max-width:479px) { .root { padding:6px 44px 6px 12px; } }
       </style>
       <div class="root" role="region" aria-label="All Aboard Ohio Developer Program">
         <span>Part of the <strong>All Aboard Ohio Developer Program</strong></span>
@@ -351,7 +352,7 @@ class AaoNotification extends HTMLElement {
         .msg   { flex:1; text-align:center; max-width:860px; }
         a      { color:${theme.link}; font-weight:600; text-decoration:none; white-space:nowrap; }
         a:hover { text-decoration:underline; }
-        .dismiss { background:none; border:none; cursor:pointer; color:${theme.dismiss}; display:flex; align-items:center; padding:4px; border-radius:4px; flex-shrink:0; margin-left:6px; line-height:1; }
+        .dismiss { background:none; border:none; cursor:pointer; color:${theme.dismiss}; display:flex; align-items:center; justify-content:center; min-width:44px; min-height:44px; padding:4px; border-radius:4px; flex-shrink:0; margin-left:6px; line-height:1; }
         .dismiss:hover { color:${theme.text}; }
         .dismiss:focus-visible { outline:2px solid ${theme.link}; outline-offset:2px; }
         a:focus-visible { outline:2px solid ${theme.link}; outline-offset:2px; border-radius:2px; }
