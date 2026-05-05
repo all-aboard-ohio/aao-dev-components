@@ -3,308 +3,337 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>aao-banner — Component Demo</title>
+  <title>aao-dev-components — Demo</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
-      background: #f5f5f5;
-      color: #1a1a1a;
-    }
-    .page {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 48px 24px 80px;
-    }
-    h1 {
-      font-size: 28px;
-      font-weight: 800;
-      color: #012345;
-      margin-bottom: 6px;
-    }
-    .subtitle {
-      font-size: 14px;
-      color: #666;
-      margin-bottom: 48px;
-    }
-    .section {
-      margin-bottom: 48px;
-    }
-    .section-label {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: #888;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .section-label::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: #ddd;
-    }
-    .section-desc {
-      font-size: 13px;
-      color: #666;
-      margin-bottom: 12px;
-      line-height: 1.5;
-    }
-    .demo-frame {
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
-      overflow: hidden;
-      background: white;
-    }
-    .demo-frame.dark-bg {
-      background: #eaf4fb;
-    }
-    .mock-page {
-      padding: 24px;
-      background: #ffffff;
-    }
-    .mock-page.dark { background: #0a1929; }
-    .mock-content {
-      height: 60px;
-      background: repeating-linear-gradient(
-        90deg,
-        #f0f0f0 0px, #f0f0f0 200px,
-        transparent 200px, transparent 220px
-      );
-      border-radius: 4px;
-      opacity: 0.5;
-    }
+    body { font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; background: #f2f2f2; color: #1a1a1a; }
+    .page { max-width: 940px; margin: 0 auto; padding: 48px 24px 100px; }
+    h1 { font-size: 26px; font-weight: 800; color: #012345; margin-bottom: 4px; }
+    .tagline { font-size: 14px; color: #666; margin-bottom: 52px; }
+    h2 { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #888; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+    h2::after { content: ''; flex: 1; height: 1px; background: #ddd; }
+    h3 { font-size: 13px; font-weight: 700; color: #333; margin-bottom: 6px; }
+    .desc { font-size: 13px; color: #666; line-height: 1.55; margin-bottom: 14px; }
+    .section { margin-bottom: 52px; }
+    .sub-section { margin-bottom: 32px; }
+    .frame { border: 1px solid #ddd; border-radius: 10px; overflow: hidden; background: white; }
+    .mock-body { padding: 20px; background: #fafafa; min-height: 48px; }
+    .mock-line { height: 12px; background: #eee; border-radius: 4px; margin-bottom: 8px; }
+    .mock-line:last-child { width: 60%; margin-bottom: 0; }
     code {
       font-family: 'Fira Code', 'Consolas', monospace;
-      font-size: 12px;
+      font-size: 11.5px;
       background: #f0f4f8;
       color: #012345;
       padding: 12px 16px;
       display: block;
-      border-radius: 0 0 8px 8px;
       border-top: 1px solid #e0e0e0;
       white-space: pre;
+      overflow-x: auto;
     }
+    .reset-note {
+      font-size: 11.5px;
+      color: #999;
+      margin-top: 8px;
+    }
+    .reset-note code { display: inline; padding: 1px 5px; border: none; font-size: 11px; background: #eee; border-radius: 3px; color: #555; }
   </style>
 </head>
 <body>
 
+<div id="reset-bar">
+  <span>Dismissed something? Reset to restore all components.</span>
+  <button onclick="resetDismissed()">Reset all dismissed &amp; reload</button>
+</div>
+
 <div class="page">
-  <h1>aao-banner</h1>
-  <p class="subtitle">All Aboard Ohio shared notification component &mdash; four display modes</p>
+  <h1>aao-dev-components</h1>
+  <p class="tagline">Shared UI components for All Aboard Ohio developer program sites.</p>
 
-  <!-- COMPACT -->
+  <!-- SITE HEADER -->
   <div class="section">
-    <div class="section-label">compact</div>
-    <p class="section-desc">Government-attribution bar. Always visible, no config fetch. Designed for top-of-page or footer placement. Modelled on the USWDS site attribution pattern.</p>
-    <div class="demo-frame">
-      <aao-banner mode="compact" inline></aao-banner>
-      <div class="mock-page"><div class="mock-content"></div></div>
-      <code>&lt;aao-banner mode="compact"&gt;&lt;/aao-banner&gt;</code>
+    <h2>&lt;aao-site-header&gt; — Site attribution header</h2>
+    <p class="desc" style="margin-bottom:28px">
+      Identifies a site as part of the AAO Developer Program. Carries the AAO logo, a link to the developer portal, and a link to allaboardohio.org.
+      Dismissible — dismissal persists per-user in <code style="display:inline;padding:2px 5px;border-radius:3px">localStorage</code>.
+    </p>
+
+    <div class="sub-section">
+      <h3>Standard — full branded bar</h3>
+      <p class="desc">Full-width branded header. Use at the very top of tools and sub-sites that are part of the AAO Developer Program.</p>
+      <div class="frame">
+        <aao-site-header banner-id="demo-std-1"></aao-site-header>
+        <div class="mock-body">
+          <div class="mock-line"></div><div class="mock-line"></div><div class="mock-line"></div>
+        </div>
+        <code>&lt;aao-site-header&gt;&lt;/aao-site-header&gt;</code>
+      </div>
+      <p class="reset-note">Dismissed? Open DevTools → Application → Local Storage → delete <code>aao-dismissed-site-header-standard</code></p>
+    </div>
+
+    <div class="sub-section">
+      <h3>Compact — thin attribution bar</h3>
+      <p class="desc">Single-line bar. Use at the top of pages where the standard bar is too prominent, or at the bottom of a footer.</p>
+      <div class="frame">
+        <aao-site-header mode="compact" banner-id="demo-cmp-1"></aao-site-header>
+        <div class="mock-body">
+          <div class="mock-line"></div><div class="mock-line"></div>
+        </div>
+        <code>&lt;aao-site-header mode="compact"&gt;&lt;/aao-site-header&gt;</code>
+      </div>
+    </div>
+
+    <div class="sub-section">
+      <h3>Footer context (compact)</h3>
+      <p class="desc">The compact bar naturally doubles as a footer attribution strip.</p>
+      <div class="frame">
+        <div class="mock-body" style="background:#012345; height:55px;"></div>
+        <aao-site-header mode="compact" banner-id="demo-footer-1"></aao-site-header>
+        <code>&lt;!-- last child inside your &lt;footer&gt; --&gt;
+&lt;aao-site-header mode="compact"&gt;&lt;/aao-site-header&gt;</code>
+      </div>
     </div>
   </div>
 
-  <!-- STANDARD -->
+  <!-- NOTIFICATION BARS -->
   <div class="section">
-    <div class="section-label">standard</div>
-    <p class="section-desc">Default notification bar. Warm AAO beige with icon, message, optional CTA link, and dismiss button. Reads from the central banner.json config.</p>
-    <div class="demo-frame">
-      <aao-banner
-        mode="standard"
-        inline
-        banner-id="demo-standard-1"
-        message="The Economic Impact Calculator is now live and publicly available."
-        link="https://github.com/all-aboard-ohio"
-        link-text="Open the tool"
-        type="success"
-      ></aao-banner>
-      <div class="mock-page"><div class="mock-content"></div></div>
-      <code>&lt;aao-banner
+    <h2>&lt;aao-notification&gt; — Notification bars</h2>
+    <p class="desc" style="margin-bottom:28px">
+      Announcement bars that sit below the site header or below site navigation.
+      Can be driven by a central JSON config (flip <code style="display:inline;padding:2px 5px;border-radius:3px">"active": true</code> in <code style="display:inline;padding:2px 5px;border-radius:3px">banner.json</code>
+      to broadcast to every AAO site at once) or via inline attributes.
+    </p>
+
+    <div class="sub-section">
+      <h3>Standard (info)</h3>
+      <div class="frame">
+        <aao-notification inline banner-id="demo-n-info" message="Developer documentation has been updated with new architecture guides." link="https://github.com/all-aboard-ohio/aao-dev-docs" link-text="Read the docs" type="info"></aao-notification>
+        <div class="mock-body"><div class="mock-line"></div><div class="mock-line"></div></div>
+        <code>&lt;aao-notification
   config-url="https://raw.githubusercontent.com/all-aboard-ohio/aao-dev-components/main/banner.json"
-  mode="standard"
-&gt;&lt;/aao-banner&gt;</code>
+&gt;&lt;/aao-notification&gt;</code>
+      </div>
+    </div>
+
+    <div class="sub-section">
+      <h3>Standard (warning)</h3>
+      <div class="frame">
+        <aao-notification inline banner-id="demo-n-warn" message="Scheduled maintenance on May 10 — tools may be briefly unavailable." type="warning"></aao-notification>
+        <div class="mock-body"><div class="mock-line"></div></div>
+        <code>type="warning"</code>
+      </div>
+    </div>
+
+    <div class="sub-section">
+      <h3>Standard (success)</h3>
+      <div class="frame">
+        <aao-notification inline banner-id="demo-n-ok" message="The Economic Impact Calculator is now live and publicly available." link="https://github.com/all-aboard-ohio" link-text="Open the tool" type="success"></aao-notification>
+        <div class="mock-body"><div class="mock-line"></div></div>
+        <code>type="success"</code>
+      </div>
+    </div>
+
+    <div class="sub-section">
+      <h3>Lite mode</h3>
+      <div class="frame">
+        <aao-notification mode="lite" inline banner-id="demo-n-lite" message="New route data is available for the Proposed Route Mapper." link="https://github.com/all-aboard-ohio" link-text="View data" type="info"></aao-notification>
+        <div class="mock-body"><div class="mock-line"></div></div>
+        <code>&lt;aao-notification mode="lite" ...&gt;&lt;/aao-notification&gt;</code>
+      </div>
+    </div>
+
+    <div class="sub-section">
+      <h3>Dark mode</h3>
+      <div class="frame">
+        <aao-notification mode="dark" inline banner-id="demo-n-dark" message="The AAO Developer Program is now accepting capstone project applications." link="https://github.com/all-aboard-ohio" link-text="Learn more" type="info"></aao-notification>
+        <div class="mock-body"><div class="mock-line"></div></div>
+        <code>&lt;aao-notification mode="dark" ...&gt;&lt;/aao-notification&gt;</code>
+      </div>
     </div>
   </div>
 
-  <!-- LITE -->
+  <!-- FULL PAGE EXAMPLE -->
   <div class="section">
-    <div class="section-label">lite</div>
-    <p class="section-desc">Low visual weight, blue tint. Good for informational notices that shouldn't compete with primary content.</p>
-    <div class="demo-frame">
-      <aao-banner
-        mode="lite"
-        inline
-        banner-id="demo-lite-1"
-        message="Developer documentation has been updated with new architecture guides."
-        link="https://github.com/all-aboard-ohio/aao-dev-docs"
-        link-text="Read the docs"
-        type="info"
-      ></aao-banner>
-      <div class="mock-page"><div class="mock-content"></div></div>
-      <code>&lt;aao-banner
-  config-url="..."
-  mode="lite"
-&gt;&lt;/aao-banner&gt;</code>
-    </div>
-  </div>
+    <h2>Full page composition</h2>
+    <p class="desc" style="margin-bottom:14px">How all layers stack on a typical AAO developer tool page.</p>
+    <div class="frame">
+      <aao-site-header banner-id="demo-fp-hdr"></aao-site-header>
+      <aao-notification inline mode="standard" banner-id="demo-fp-notif" message="This tool is in beta. Report issues on GitHub." link="https://github.com/all-aboard-ohio" link-text="Open an issue" type="warning"></aao-notification>
+      <!-- mock page nav -->
+      <div style="background:#012345;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;">
+        <span style="color:white;font-size:14px;font-weight:700;">My AAO Tool</span>
+        <span style="color:rgba(255,255,255,0.5);font-size:12px;">nav links here</span>
+      </div>
+      <div class="mock-body" style="min-height:80px">
+        <div class="mock-line"></div><div class="mock-line"></div><div class="mock-line"></div>
+      </div>
+      <!-- mock footer -->
+      <div style="background:#012345;padding:16px 20px;">
+        <div style="height:20px;background:rgba(255,255,255,0.05);border-radius:4px;margin-bottom:10px;"></div>
+      </div>
+      <aao-site-header mode="compact" banner-id="demo-fp-ftr"></aao-site-header>
+      <code>&lt;!-- Top of page --&gt;
+&lt;aao-site-header&gt;&lt;/aao-site-header&gt;
+&lt;aao-notification config-url="...banner.json"&gt;&lt;/aao-notification&gt;
 
-  <!-- DARK -->
-  <div class="section">
-    <div class="section-label">dark</div>
-    <p class="section-desc">AAO dark blue background with white text. High contrast. Use when the surrounding page is light and you want the banner to anchor the top strongly.</p>
-    <div class="demo-frame">
-      <aao-banner
-        mode="dark"
-        inline
-        banner-id="demo-dark-1"
-        message="Scheduled maintenance on May 10 — tools may be briefly unavailable."
-        link="https://github.com/all-aboard-ohio"
-        link-text="More info"
-        type="warning"
-      ></aao-banner>
-      <div class="mock-page"><div class="mock-content"></div></div>
-      <code>&lt;aao-banner
-  config-url="..."
-  mode="dark"
-&gt;&lt;/aao-banner&gt;</code>
-    </div>
-  </div>
+&lt;!-- your nav, content, footer... --&gt;
 
-  <!-- WARNING TYPE -->
-  <div class="section">
-    <div class="section-label">type variants</div>
-    <p class="section-desc">The <code style="display:inline;padding:2px 5px;border-radius:3px">type</code> field changes the icon. Works across all modes. Options: <strong>info</strong>, <strong>warning</strong>, <strong>success</strong>.</p>
-    <div class="demo-frame">
-      <aao-banner mode="standard" inline banner-id="demo-type-info" message="This is an info notification." type="info"></aao-banner>
-      <aao-banner mode="standard" inline banner-id="demo-type-warn" message="This is a warning notification." type="warning"></aao-banner>
-      <aao-banner mode="standard" inline banner-id="demo-type-ok" message="This is a success notification." type="success"></aao-banner>
-      <code>type="info" | type="warning" | type="success"</code>
-    </div>
-  </div>
-
-  <!-- FOOTER USAGE -->
-  <div class="section">
-    <div class="section-label">footer placement (compact)</div>
-    <p class="section-desc">Compact mode at the bottom of a footer — attributes the site without taking up visual space.</p>
-    <div class="demo-frame">
-      <div class="mock-page" style="background:#012345; height:60px;"></div>
-      <aao-banner mode="compact" inline></aao-banner>
-      <code>&lt;!-- Inside your &lt;footer&gt;, after all content --&gt;
-&lt;aao-banner mode="compact"&gt;&lt;/aao-banner&gt;</code>
+&lt;!-- Bottom of footer --&gt;
+&lt;aao-site-header mode="compact"&gt;&lt;/aao-site-header&gt;</code>
     </div>
   </div>
 
 </div>
 
 <script>
-// Inline the component so the demo works without GitHub Pages being live
+  function resetDismissed() {
+    Object.keys(localStorage)
+      .filter(k => k.startsWith('aao-dismissed-'))
+      .forEach(k => localStorage.removeItem(k));
+    location.reload();
+  }
+</script>
+<script>
+// Component code inlined so demo works over file:// without a server
+// (ES modules are blocked by browsers on file:// due to CORS)
 
-const STORAGE_KEY_PREFIX = 'aao-banner-dismissed-';
-
-const THEMES = {
-  standard: { bg: '#FBF3E3', border: '#e8d9b8', text: '#012345', link: '#B72717', dismiss: '#888', icon: '#388CBB' },
-  lite:     { bg: '#f0f7ff', border: '#c8dff0', text: '#012345', link: '#388CBB', dismiss: '#aab', icon: '#388CBB' },
-  dark:     { bg: '#012345', border: '#1a3a5c', text: '#ffffff', link: '#7ec8e3', dismiss: '#7a9ab8', icon: '#388CBB' },
-  compact:  { bg: '#012345', border: 'transparent', text: '#e8edf2', link: '#7ec8e3', dismiss: '#7a9ab8', icon: '#388CBB' },
-};
-
-const TYPE_ICONS = {
+const STORAGE_KEY = 'aao-dismissed-';
+const TRAIN_SVG = (size=20) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="16" x="4" y="3" rx="2"/><path d="M4 11h16"/><path d="M12 3v8"/><path d="m8 19-2 3"/><path d="m16 19 2 3"/><circle cx="9" cy="15" r="1"/><circle cx="15" cy="15" r="1"/></svg>`;
+const ARROW_SVG = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>`;
+const X_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+const NOTIF_ICONS = {
   info:    `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`,
   warning: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
   success: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
 };
-
-const DISMISS_ICON = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
-
-class AaoBanner extends HTMLElement {
-  connectedCallback() {
-    const mode = this.getAttribute('mode') || 'standard';
-    if (mode === 'compact') { this._renderCompact(); return; }
-    if (this.hasAttribute('inline')) {
-      this._render({
-        active: true,
-        id: this.getAttribute('banner-id') || 'inline',
-        message: this.getAttribute('message') || '',
-        link: this.getAttribute('link') || '',
-        linkText: this.getAttribute('link-text') || 'Learn more',
-        type: this.getAttribute('type') || 'info',
-      }, mode);
-      return;
-    }
-    const configUrl = this.getAttribute('config-url');
-    if (!configUrl) return;
-    fetch(configUrl).then(r => r.json()).then(c => this._render(c, mode)).catch(() => {});
-  }
-
-  _isDismissed(id) { try { return localStorage.getItem(STORAGE_KEY_PREFIX + id) === '1'; } catch { return false; } }
-  _dismiss(id) {
-    try { localStorage.setItem(STORAGE_KEY_PREFIX + id, '1'); } catch {}
-    const el = this.shadowRoot?.querySelector('.banner');
-    if (el) {
-      el.style.maxHeight = el.scrollHeight + 'px';
-      requestAnimationFrame(() => {
-        el.style.transition = 'max-height 0.3s ease, opacity 0.3s ease';
-        el.style.maxHeight = '0'; el.style.opacity = '0'; el.style.overflow = 'hidden';
-      });
-      setTimeout(() => this.remove(), 350);
-    }
-  }
-
-  _render(config, mode) {
-    if (!config.active) return;
-    if (this._isDismissed(config.id)) return;
-    const theme = THEMES[mode] || THEMES.standard;
-    const icon = TYPE_ICONS[config.type] || TYPE_ICONS.info;
-    const padding = '12px 16px';
-    this.attachShadow({ mode: 'open' });
-    this.shadowRoot.innerHTML = `
-      <style>
-        :host { display: block; width: 100%; box-sizing: border-box; }
-        .banner { display: flex; align-items: center; justify-content: center; gap: 8px; background: ${theme.bg}; border-bottom: 1px solid ${theme.border}; color: ${theme.text}; padding: ${padding}; font-family: system-ui, sans-serif; font-size: 14px; line-height: 1.4; box-sizing: border-box; }
-        .icon { color: ${theme.icon}; display: flex; align-items: center; flex-shrink: 0; }
-        .message { flex: 1; text-align: center; max-width: 900px; }
-        .link { color: ${theme.link}; font-weight: 600; text-decoration: none; white-space: nowrap; }
-        .link:hover { text-decoration: underline; }
-        .dismiss { background: none; border: none; cursor: pointer; color: ${theme.dismiss}; display: flex; align-items: center; padding: 4px; border-radius: 4px; flex-shrink: 0; margin-left: 8px; }
-        .dismiss:hover { color: ${theme.text}; }
-      </style>
-      <div class="banner" role="status">
-        <span class="icon">${icon}</span>
-        <span class="message">${config.message}${config.link ? ` &nbsp;<a class="link" href="${config.link}" target="_blank" rel="noopener noreferrer">${config.linkText || 'Learn more'} →</a>` : ''}</span>
-        <button class="dismiss" aria-label="Dismiss">${DISMISS_ICON}</button>
-      </div>`;
-    this.shadowRoot.querySelector('.dismiss').addEventListener('click', () => this._dismiss(config.id));
-  }
-
-  _renderCompact() {
-    const theme = THEMES.compact;
-    this.attachShadow({ mode: 'open' });
-    this.shadowRoot.innerHTML = `
-      <style>
-        :host { display: block; width: 100%; box-sizing: border-box; }
-        .banner { display: flex; align-items: center; justify-content: center; gap: 10px; background: ${theme.bg}; color: ${theme.text}; padding: 7px 16px; font-family: system-ui, sans-serif; font-size: 12px; font-weight: 500; letter-spacing: 0.01em; text-align: center; border-bottom: 1px solid #1a3a5c; box-sizing: border-box; }
-        .label { opacity: 0.75; }
-        .sep { opacity: 0.3; }
-        .link { color: ${theme.link}; font-weight: 600; text-decoration: none; white-space: nowrap; }
-        .link:hover { text-decoration: underline; }
-        .flag { display: inline-flex; align-items: center; gap: 5px; opacity: 0.9; }
-      </style>
-      <div class="banner" role="banner">
-        <span class="flag">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="${theme.icon}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18"/><path d="M3 12h13"/><path d="M3 3l13 4.5L3 12"/></svg>
-          <span class="label">An official site of the</span>
-          <strong>All Aboard Ohio Developer Program</strong>
-        </span>
-        <span class="sep">|</span>
-        <a class="link" href="https://github.com/all-aboard-ohio" target="_blank" rel="noopener noreferrer">Learn more →</a>
-      </div>`;
-  }
+function isDismissed(id) { try { return localStorage.getItem(STORAGE_KEY+id)==='1'; } catch { return false; } }
+function saveDismiss(id) { try { localStorage.setItem(STORAGE_KEY+id,'1'); } catch {} }
+function collapse(el, onDone) {
+  el.style.maxHeight = el.scrollHeight+'px';
+  requestAnimationFrame(() => {
+    el.style.transition = 'max-height 0.28s ease, opacity 0.28s ease, padding 0.28s ease';
+    el.style.maxHeight = '0'; el.style.opacity = '0'; el.style.overflow = 'hidden';
+    el.style.paddingTop = '0'; el.style.paddingBottom = '0';
+  });
+  setTimeout(onDone, 310);
 }
 
-customElements.define('aao-banner', AaoBanner);
+class AaoSiteHeader extends HTMLElement {
+  connectedCallback() {
+    const mode = this.getAttribute('mode') || 'standard';
+    const id   = this.getAttribute('banner-id') || `site-header-${mode}`;
+    if (isDismissed(id)) return;
+    const devUrl  = this.getAttribute('dev-url')  || 'https://dev.allaboardohio.org';
+    const mainUrl = this.getAttribute('main-url') || 'https://allaboardohio.org';
+    mode === 'compact' ? this._compact(id, devUrl, mainUrl) : this._standard(id, devUrl, mainUrl);
+  }
+  _dismiss(id) { saveDismiss(id); const el = this.shadowRoot.querySelector('.root'); if (el) collapse(el, () => this.remove()); }
+  _standard(id, devUrl, mainUrl) {
+    this.attachShadow({ mode: 'open' });
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host { display: block; width: 100%; }
+        .root { background:#012345; border-bottom:2px solid #B72717; padding:10px 20px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; box-sizing:border-box; font-family:system-ui,sans-serif; }
+        .brand { display:flex; align-items:center; gap:11px; flex-shrink:0; }
+        .brand-icon { color:#388CBB; display:flex; }
+        .brand-name { font-size:15px; font-weight:700; color:#fff; line-height:1.2; letter-spacing:-0.01em; }
+        .brand-sub  { font-size:10.5px; font-weight:600; color:#7cb9d4; letter-spacing:0.06em; text-transform:uppercase; margin-top:1px; }
+        .actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+        a.btn { display:inline-flex; align-items:center; gap:5px; font-size:12.5px; font-weight:600; text-decoration:none; padding:5px 13px; border-radius:999px; border:1.5px solid transparent; transition:background .15s,color .15s,border-color .15s; white-space:nowrap; }
+        a.btn-primary { background:#B72717; border-color:#B72717; color:#fff; }
+        a.btn-primary:hover { background:#d42e1a; border-color:#d42e1a; }
+        a.btn-ghost { background:transparent; border-color:rgba(255,255,255,.2); color:rgba(255,255,255,.8); }
+        a.btn-ghost:hover { background:rgba(255,255,255,.08); color:#fff; border-color:rgba(255,255,255,.4); }
+        .dismiss { background:none; border:none; cursor:pointer; color:rgba(255,255,255,.3); display:flex; align-items:center; padding:4px; border-radius:4px; margin-left:2px; flex-shrink:0; line-height:1; }
+        .dismiss:hover { color:rgba(255,255,255,.8); }
+      </style>
+      <div class="root">
+        <div class="brand">
+          <span class="brand-icon">${TRAIN_SVG(22)}</span>
+          <div><div class="brand-name">All Aboard Ohio</div><div class="brand-sub">Developer Program</div></div>
+        </div>
+        <div class="actions">
+          <a class="btn btn-primary" href="${devUrl}"  target="_blank" rel="noopener noreferrer">Developer Portal ${ARROW_SVG}</a>
+          <a class="btn btn-ghost"   href="${mainUrl}" target="_blank" rel="noopener noreferrer">allaboardohio.org ${ARROW_SVG}</a>
+          <button class="dismiss" aria-label="Dismiss">${X_SVG}</button>
+        </div>
+      </div>`;
+    this.shadowRoot.querySelector('.dismiss').addEventListener('click', () => this._dismiss(id));
+  }
+  _compact(id, devUrl, mainUrl) {
+    this.attachShadow({ mode: 'open' });
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host { display: block; width: 100%; }
+        .root { background:#012345; border-bottom:1px solid rgba(255,255,255,.07); padding:5px 40px 5px 16px; display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:6px 10px; box-sizing:border-box; font-family:system-ui,sans-serif; font-size:12px; color:rgba(255,255,255,.65); position:relative; text-align:center; }
+        .flag { display:inline-flex; align-items:center; gap:6px; }
+        .flag svg { opacity:.6; flex-shrink:0; }
+        strong { color:rgba(255,255,255,.88); font-weight:600; }
+        .sep { opacity:.2; padding:0 2px; }
+        a { color:#7cb9d4; font-weight:600; text-decoration:none; white-space:nowrap; }
+        a:hover { text-decoration:underline; }
+        .dismiss { position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:rgba(255,255,255,.25); display:flex; align-items:center; padding:4px; border-radius:4px; line-height:1; }
+        .dismiss:hover { color:rgba(255,255,255,.75); }
+      </style>
+      <div class="root">
+        <span class="flag">${TRAIN_SVG(13)}<span>An official tool of the <strong>All Aboard Ohio Developer Program</strong></span></span>
+        <span class="sep">|</span>
+        <a href="${devUrl}"  target="_blank" rel="noopener noreferrer">Developer Portal</a>
+        <span class="sep">·</span>
+        <a href="${mainUrl}" target="_blank" rel="noopener noreferrer">allaboardohio.org</a>
+        <button class="dismiss" aria-label="Dismiss">${X_SVG}</button>
+      </div>`;
+    this.shadowRoot.querySelector('.dismiss').addEventListener('click', () => this._dismiss(id));
+  }
+}
+customElements.define('aao-site-header', AaoSiteHeader);
+
+const NOTIF_THEMES = {
+  standard: { bg:'#FBF3E3', border:'#e8d9b8', text:'#012345', link:'#B72717', dismiss:'#999', icon:'#388CBB' },
+  lite:     { bg:'#eef6fc', border:'#c5dff0', text:'#012345', link:'#388CBB', dismiss:'#aab', icon:'#388CBB' },
+  dark:     { bg:'#012345', border:'#1a3a5c', text:'#ffffff', link:'#7cb9d4', dismiss:'#6a8fa8', icon:'#388CBB' },
+};
+class AaoNotification extends HTMLElement {
+  connectedCallback() {
+    if (this.hasAttribute('inline')) {
+      this._render({ active:true, id:this.getAttribute('banner-id')||'inline-notif', message:this.getAttribute('message')||'', link:this.getAttribute('link')||'', linkText:this.getAttribute('link-text')||'Learn more', type:this.getAttribute('type')||'info' });
+      return;
+    }
+    const url = this.getAttribute('config-url');
+    if (!url) return;
+    fetch(url).then(r=>r.json()).then(c=>this._render(c)).catch(()=>{});
+  }
+  _render(config) {
+    if (!config.active) return;
+    if (isDismissed(config.id)) return;
+    const mode = this.getAttribute('mode') || 'standard';
+    const theme = NOTIF_THEMES[mode] || NOTIF_THEMES.standard;
+    const icon  = NOTIF_ICONS[config.type] || NOTIF_ICONS.info;
+    this.attachShadow({ mode:'open' });
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host { display:block; width:100%; }
+        .root { display:flex; align-items:center; justify-content:center; gap:8px; background:${theme.bg}; border-bottom:1px solid ${theme.border}; color:${theme.text}; padding:10px 16px; font-family:system-ui,sans-serif; font-size:13.5px; line-height:1.4; box-sizing:border-box; }
+        .icon  { color:${theme.icon}; display:flex; align-items:center; flex-shrink:0; }
+        .msg   { flex:1; text-align:center; max-width:860px; }
+        a      { color:${theme.link}; font-weight:600; text-decoration:none; white-space:nowrap; }
+        a:hover { text-decoration:underline; }
+        .dismiss { background:none; border:none; cursor:pointer; color:${theme.dismiss}; display:flex; align-items:center; padding:4px; border-radius:4px; flex-shrink:0; margin-left:6px; line-height:1; }
+        .dismiss:hover { color:${theme.text}; }
+      </style>
+      <div class="root" role="status">
+        <span class="icon">${icon}</span>
+        <span class="msg">${config.message}${config.link ? ` &nbsp;<a href="${config.link}" target="_blank" rel="noopener noreferrer">${config.linkText||'Learn more'} →</a>` : ''}</span>
+        <button class="dismiss" aria-label="Dismiss">${X_SVG}</button>
+      </div>`;
+    this.shadowRoot.querySelector('.dismiss').addEventListener('click', () => {
+      saveDismiss(config.id);
+      const el = this.shadowRoot.querySelector('.root');
+      if (el) collapse(el, () => this.remove());
+    });
+  }
+}
+customElements.define('aao-notification', AaoNotification);
 </script>
 </body>
 </html>
