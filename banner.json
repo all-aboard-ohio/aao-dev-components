@@ -1,0 +1,8 @@
+{
+  "active": false,
+  "id": "banner-example-001",
+  "message": "Welcome to the All Aboard Ohio Developer Program.",
+  "link": "https://github.com/all-aboard-ohio",
+  "linkText": "Learn more",
+  "type": "info"
+}
