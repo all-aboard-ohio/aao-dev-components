@@ -191,31 +191,55 @@ class AaoEventGate extends HTMLElement {
             margin-bottom:7px;
           ">Event code</label>
 
-          <input
-            id="aao-gate-input"
-            type="password"
-            autocomplete="new-password"
-            spellcheck="false"
-            autocorrect="off"
-            autocapitalize="off"
-            placeholder="Enter event code"
-            maxlength="256"
-            style="
-              display:block;
-              width:100%;
-              box-sizing:border-box;
-              background:#011e36;
-              border:1.5px solid rgba(56,140,187,0.35);
-              border-radius:8px;
-              color:#fff;
-              font-family:monospace;
-              font-size:15px;
-              padding:11px 14px;
-              outline:none;
-              transition:border-color 0.2s;
-              -webkit-appearance:none;
-            "
-          />
+          <div style="position:relative;">
+            <input
+              id="aao-gate-input"
+              type="password"
+              autocomplete="new-password"
+              spellcheck="false"
+              autocorrect="off"
+              autocapitalize="off"
+              placeholder="Enter event code"
+              maxlength="256"
+              style="
+                display:block;
+                width:100%;
+                box-sizing:border-box;
+                background:#011e36;
+                border:1.5px solid rgba(56,140,187,0.35);
+                border-radius:8px;
+                color:#fff;
+                font-family:monospace;
+                font-size:15px;
+                padding:11px 42px 11px 14px;
+                outline:none;
+                transition:border-color 0.2s;
+                -webkit-appearance:none;
+              "
+            />
+            <button
+              id="aao-gate-eye"
+              type="button"
+              aria-label="Show event code"
+              title="Show/hide code"
+              style="
+                position:absolute;
+                right:10px;
+                top:50%;
+                transform:translateY(-50%);
+                background:none;
+                border:none;
+                padding:4px;
+                cursor:pointer;
+                color:#388CBB;
+                display:flex;
+                align-items:center;
+                line-height:1;
+              "
+            >
+              <svg id="aao-gate-eye-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
 
           <!-- Turnstile widget container -->
           <div id="aao-gate-turnstile" style="margin:20px 0 8px;min-height:65px;"></div>
@@ -352,6 +376,18 @@ class AaoEventGate extends HTMLElement {
     submit.style.cursor  = 'pointer';
     if (btnLabel) btnLabel.textContent = 'Unlock';
     if (btnIcon)  btnIcon.innerHTML    = LOCK_SVG;
+    // #10: Auto-submit if the code field is already filled when Turnstile completes
+    this._tryAutoSubmit();
+  }
+
+  // #10: Submit automatically when both Turnstile token and code are present.
+  // Managed Turnstile often passes silently — no extra click needed.
+  _tryAutoSubmit() {
+    if (this._locked) return;
+    const input = this._gateEl?.querySelector('#aao-gate-input');
+    if (input && this._turnstileToken && input.value.trim().length > 0) {
+      this._handleSubmit();
+    }
   }
 
   _onTurnstileExpired() {
@@ -391,8 +427,9 @@ class AaoEventGate extends HTMLElement {
   // ── Form events ───────────────────────────────────────────────────────────────
 
   _bindFormEvents() {
-    const form   = this._gateEl.querySelector('#aao-gate-form');
-    const input  = this._gateEl.querySelector('#aao-gate-input');
+    const form  = this._gateEl.querySelector('#aao-gate-form');
+    const input = this._gateEl.querySelector('#aao-gate-input');
+    const eye   = this._gateEl.querySelector('#aao-gate-eye');
 
     input.addEventListener('focus', () => {
       input.style.borderColor = 'rgba(56,140,187,0.85)';
@@ -400,7 +437,39 @@ class AaoEventGate extends HTMLElement {
     input.addEventListener('blur', () => {
       input.style.borderColor = 'rgba(56,140,187,0.35)';
     });
-    input.addEventListener('input', () => this._clearError());
+
+    // #11: Paste normalization — trim whitespace, normalise to lowercase
+    input.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const pasted     = (e.clipboardData || window.clipboardData).getData('text');
+      const normalised = pasted.trim().toLowerCase();
+      // Insert at cursor position (overwrites selection if any)
+      const start = input.selectionStart ?? 0;
+      const end   = input.selectionEnd   ?? 0;
+      input.value = input.value.slice(0, start) + normalised + input.value.slice(end);
+      input.setSelectionRange(start + normalised.length, start + normalised.length);
+      this._clearError();
+    });
+
+    input.addEventListener('input', () => {
+      this._clearError();
+    });
+
+    // #5: Show/hide toggle
+    if (eye) {
+      eye.addEventListener('click', () => {
+        const showing = input.type === 'text';
+        input.type = showing ? 'password' : 'text';
+        eye.setAttribute('aria-label', showing ? 'Show event code' : 'Hide event code');
+        const icon = eye.querySelector('#aao-gate-eye-icon');
+        if (icon) {
+          icon.innerHTML = showing
+            ? '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>'
+            : '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>';
+        }
+        input.focus();
+      });
+    }
 
     form.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -410,6 +479,13 @@ class AaoEventGate extends HTMLElement {
 
   async _handleSubmit() {
     if (this._locked) return;
+
+    // #12: Detect offline before attempting network request
+    if (!navigator.onLine) {
+      this._showError('No internet connection. Connect to WiFi or mobile data, then tap Retry.');
+      this._showRetry();
+      return;
+    }
 
     const input = this._gateEl?.querySelector('#aao-gate-input');
     if (!input) return;
@@ -470,8 +546,11 @@ class AaoEventGate extends HTMLElement {
     } catch (err) {
       console.error('[aao-event-gate] Auth request failed:', err);
       this._showError(
-        'Unable to reach the auth server. Check your connection and try again.'
+        navigator.onLine
+          ? 'Unable to reach the auth server. Check your connection and try again.'
+          : 'No internet connection. Connect to WiFi or mobile data, then tap Retry.'
       );
+      this._showRetry();
       this._resetTurnstile();
       this._setLoading(false);
     }
@@ -502,8 +581,39 @@ class AaoEventGate extends HTMLElement {
   _showError(msg) {
     const err = this._gateEl?.querySelector('#aao-gate-error');
     if (!err) return;
+    // Remove any existing retry button before setting new text
+    const existingRetry = err.querySelector('#aao-gate-retry');
+    if (existingRetry) existingRetry.remove();
     err.textContent  = msg;
     err.style.display = 'block';
+  }
+
+  // #12: Append a Retry button inside the error box — re-triggers _handleSubmit
+  _showRetry() {
+    const err = this._gateEl?.querySelector('#aao-gate-error');
+    if (!err || err.querySelector('#aao-gate-retry')) return;
+    const btn = document.createElement('button');
+    btn.id        = 'aao-gate-retry';
+    btn.type      = 'button';
+    btn.textContent = 'Retry';
+    Object.assign(btn.style, {
+      display:      'inline-block',
+      marginTop:    '8px',
+      padding:      '5px 14px',
+      background:   'rgba(56,140,187,0.15)',
+      border:       '1px solid rgba(56,140,187,0.4)',
+      borderRadius: '5px',
+      color:        '#94b8cc',
+      fontFamily:   "'Montserrat',system-ui,sans-serif",
+      fontSize:     '12px',
+      cursor:       'pointer',
+    });
+    btn.addEventListener('click', () => {
+      this._clearError();
+      this._handleSubmit();
+    });
+    err.appendChild(document.createElement('br'));
+    err.appendChild(btn);
   }
 
   _showTurnstileError(msg) {
@@ -571,6 +681,8 @@ class AaoEventGate extends HTMLElement {
           exp:   payload?.exp   ?? null,
         },
       }));
+      // #4: Start expiry warning watch after unlocking
+      if (payload?.exp) this._startExpiryWatch(payload.exp);
     };
 
     if (animate && this._gateEl) {
@@ -580,6 +692,96 @@ class AaoEventGate extends HTMLElement {
     } else {
       reveal();
     }
+  }
+
+  // ── Expiry warning (#4) ───────────────────────────────────────────────────────
+
+  _startExpiryWatch(exp) {
+    const WARN_BEFORE_SECS = 30 * 60; // show banner when ≤ 30 min remain
+    const CHECK_INTERVAL   = 5 * 60 * 1000; // check every 5 min
+
+    const check = () => {
+      const remaining = exp - Math.floor(Date.now() / 1000);
+      if (remaining <= 0) {
+        clearInterval(this._expiryInterval);
+        this._expiryInterval = null;
+        this._showExpiryBanner('Your session has expired. Refresh the page to re-authenticate.', true);
+        return;
+      }
+      if (remaining <= WARN_BEFORE_SECS) {
+        const mins = Math.ceil(remaining / 60);
+        this._showExpiryBanner(
+          `Your session expires in ${mins} minute${mins === 1 ? '' : 's'}. Re-enter the event code to continue.`,
+          false
+        );
+      }
+    };
+
+    check(); // run immediately in case they're already close to expiry
+    this._expiryInterval = setInterval(check, CHECK_INTERVAL);
+  }
+
+  _showExpiryBanner(msg, isExpired) {
+    const existing = document.getElementById('aao-gate-expiry-banner');
+    if (existing) {
+      // Update text in-place if the banner is already visible
+      existing.childNodes[0].textContent = msg;
+      existing.style.background = isExpired ? '#B72717' : '#012f55';
+      existing.style.border     = `1px solid ${isExpired ? 'rgba(183,39,23,0.6)' : 'rgba(56,140,187,0.4)'}`;
+      return;
+    }
+
+    const banner = document.createElement('div');
+    banner.id = 'aao-gate-expiry-banner';
+    banner.setAttribute('role', 'status');
+    banner.setAttribute('aria-live', 'polite');
+    Object.assign(banner.style, {
+      position:     'fixed',
+      bottom:       '16px',
+      left:         '50%',
+      transform:    'translateX(-50%)',
+      zIndex:       '9998',
+      background:   isExpired ? '#B72717' : '#012f55',
+      border:       `1px solid ${isExpired ? 'rgba(183,39,23,0.6)' : 'rgba(56,140,187,0.4)'}`,
+      color:        '#fff',
+      fontFamily:   "'Montserrat',system-ui,sans-serif",
+      fontSize:     '13px',
+      padding:      '10px 18px',
+      borderRadius: '8px',
+      boxShadow:    '0 4px 20px rgba(0,0,0,0.4)',
+      maxWidth:     '90vw',
+      textAlign:    'center',
+      lineHeight:   '1.5',
+      whiteSpace:   'normal',
+    });
+
+    const text = document.createTextNode(msg);
+    banner.appendChild(text);
+
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.setAttribute('aria-label', 'Dismiss');
+    close.textContent = '×';
+    Object.assign(close.style, {
+      marginLeft:    '12px',
+      background:    'none',
+      border:        'none',
+      color:         '#94b8cc',
+      fontSize:      '16px',
+      cursor:        'pointer',
+      verticalAlign: 'middle',
+      lineHeight:    '1',
+    });
+    close.addEventListener('click', () => {
+      banner.remove();
+      // Stop polling after user explicitly dismisses (unless expired)
+      if (!isExpired && this._expiryInterval) {
+        clearInterval(this._expiryInterval);
+        this._expiryInterval = null;
+      }
+    });
+    banner.appendChild(close);
+    document.body.appendChild(banner);
   }
 
   // ── Misc ─────────────────────────────────────────────────────────────────────

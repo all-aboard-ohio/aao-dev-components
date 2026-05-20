@@ -48,13 +48,13 @@ function getCorsHeaders(request, env) {
   // If no origins configured, allow all (warn in logs)
   const isAllowed = allowed.length === 0 || allowed.includes(origin);
   if (allowed.length === 0) {
-    console.warn('[aao-event-gate] ALLOWED_ORIGINS is not set — accepting all origins. Set this in production.');
+    structuredLog('warn', 'cors_open', { note: 'ALLOWED_ORIGINS not set — accepting all origins' });
   }
 
   return {
     'Access-Control-Allow-Origin':  isAllowed ? origin : 'null',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Admin-Key',
     'Access-Control-Max-Age':       '86400',
     'Vary':                         'Origin',
   };
@@ -135,21 +135,21 @@ async function constantTimeEqual(a, b) {
 
 // ── Rate limiting (Cloudflare KV) ────────────────────────────────────────────
 
-async function getRateCount(ip, kv) {
-  const val = await kv.get(`rl:${ip}`, 'json');
+async function getRateCount(ip, eventName, kv) {
+  const val = await kv.get(`rl:${eventName}:${ip}`, 'json');
   return (val && typeof val.count === 'number') ? val.count : 0;
 }
 
-async function incrementRateLimit(ip, kv) {
-  const key   = `rl:${ip}`;
-  const count = await getRateCount(ip, kv);
+async function incrementRateLimit(ip, eventName, kv) {
+  const key   = `rl:${eventName}:${ip}`;
+  const count = await getRateCount(ip, eventName, kv);
   const next  = count + 1;
   await kv.put(key, JSON.stringify({ count: next }), { expirationTtl: RATE_LIMIT_WINDOW });
   return next;
 }
 
-async function clearRateLimit(ip, kv) {
-  await kv.delete(`rl:${ip}`);
+async function clearRateLimit(ip, eventName, kv) {
+  await kv.delete(`rl:${eventName}:${ip}`);
 }
 
 // ── Cloudflare Turnstile verification ────────────────────────────────────────
@@ -177,15 +177,123 @@ function json(body, status, extraHeaders = {}) {
   });
 }
 
+// ── Structured logging (#9) ───────────────────────────────────────────────────
+// IPs are never logged in plaintext. A one-way HMAC (first 8 bytes) is used
+// for correlation without exposing the raw address in log exports.
+
+async function hashIp(ip) {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw', enc.encode('aao-log-ip-v1'),
+    { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+  );
+  const mac = await crypto.subtle.sign('HMAC', key, enc.encode(ip));
+  return Array.from(new Uint8Array(mac)).slice(0, 8).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function structuredLog(level, event, extras = {}) {
+  const entry = { level, event, ts: Math.floor(Date.now() / 1000), ...extras };
+  if (level === 'error') {
+    console.error(JSON.stringify(entry));
+  } else if (level === 'warn') {
+    console.warn(JSON.stringify(entry));
+  } else {
+    console.log(JSON.stringify(entry));
+  }
+}
+
+// ── JWT verification (used by /verify endpoint, #1) ──────────────────────────
+
+async function verifyJWT(token, secret) {
+  if (!token || typeof token !== 'string') return null;
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+  try {
+    const enc      = new TextEncoder();
+    const input    = `${parts[0]}.${parts[1]}`;
+    const sigBytes = Uint8Array.from(
+      atob(parts[2].replace(/-/g, '+').replace(/_/g, '/')),
+      c => c.charCodeAt(0)
+    );
+    const key = await crypto.subtle.importKey(
+      'raw', enc.encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']
+    );
+    const valid = await crypto.subtle.verify('HMAC', key, sigBytes, enc.encode(input));
+    if (!valid) return null;
+    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+    if (typeof payload.exp === 'number' && Date.now() / 1000 > payload.exp) return null;
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
 // ── Main fetch handler ────────────────────────────────────────────────────────
 
 export default {
   async fetch(request, env) {
     const cors = getCorsHeaders(request, env);
+    const url  = new URL(request.url);
 
     // CORS preflight
     if (request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: cors });
+    }
+
+    // ── Route: POST /verify (#1) ─────────────────────────────────────────────
+    // Lightweight token introspection for embedded tools — verify a JWT is
+    // still valid and optionally assert it matches an expected scope.
+    if (url.pathname === '/verify' && request.method === 'POST') {
+      if (!env.JWT_SECRET) {
+        return json({ error: 'Server misconfiguration.' }, 500, cors);
+      }
+      let body;
+      try { body = await request.json(); } catch {
+        return json({ error: 'Invalid JSON body' }, 400, cors);
+      }
+      const { token, scope } = body;
+      if (!token || typeof token !== 'string') {
+        return json({ valid: false, error: 'Missing token' }, 400, cors);
+      }
+      const payload = await verifyJWT(token, env.JWT_SECRET);
+      if (!payload) {
+        return json({ valid: false }, 401, cors);
+      }
+      if (scope && payload.scope && payload.scope !== scope && payload.scope !== 'default') {
+        return json({ valid: false, error: 'Token scope mismatch' }, 403, cors);
+      }
+      return json({ valid: true, event: payload.event, scope: payload.scope, exp: payload.exp }, 200, cors);
+    }
+
+    // ── Route: GET /stats (#8) ───────────────────────────────────────────────
+    // Admin-only endpoint — requires X-Admin-Key header matching ADMIN_KEY secret.
+    // Returns event metadata. Set ADMIN_KEY via `wrangler secret put ADMIN_KEY`.
+    if (url.pathname === '/stats' && request.method === 'GET') {
+      if (!env.ADMIN_KEY) {
+        return json({ error: 'Stats endpoint not configured (ADMIN_KEY missing).' }, 503, cors);
+      }
+      const providedKey = request.headers.get('X-Admin-Key') || '';
+      // Constant-time comparison using HMAC with a per-request ephemeral key
+      const enc     = new TextEncoder();
+      const rawKey  = crypto.getRandomValues(new Uint8Array(32));
+      const hmacKey = await crypto.subtle.importKey('raw', rawKey, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+      const [macA, macB] = await Promise.all([
+        crypto.subtle.sign('HMAC', hmacKey, enc.encode(providedKey)),
+        crypto.subtle.sign('HMAC', hmacKey, enc.encode(env.ADMIN_KEY)),
+      ]);
+      const ua = new Uint8Array(macA), ub = new Uint8Array(macB);
+      let diff = 0;
+      for (let i = 0; i < 32; i++) diff |= (ua[i] ?? 0) ^ (ub[i] ?? 0);
+      if (diff !== 0) {
+        return json({ error: 'Unauthorized' }, 401, cors);
+      }
+      return json({
+        event:     env.EVENT_NAME  || 'aao-event',
+        ttlHours:  parseInt(env.TTL_HOURS || '8', 10),
+        toolScope: env.TOOL_SCOPE  || 'default',
+        workerTime: new Date().toISOString(),
+      }, 200, cors);
     }
 
     if (request.method !== 'POST') {
@@ -195,16 +303,19 @@ export default {
     // ── Check required bindings ─────────────────────────────────────────────
 
     if (!env.RATE_LIMIT_KV || !env.EVENT_CODE_HASH || !env.JWT_SECRET || !env.TURNSTILE_SECRET) {
-      console.error('[aao-event-gate] One or more required environment bindings are missing.');
+      await structuredLog('error', 'misconfiguration', { note: 'Missing required environment bindings' });
       return json({ error: 'Server misconfiguration — contact the tool administrator.' }, 500, cors);
     }
 
     // ── Rate limit check (by real client IP — set by Cloudflare edge) ───────
 
-    const ip    = request.headers.get('CF-Connecting-IP') || '0.0.0.0';
-    const count = await getRateCount(ip, env.RATE_LIMIT_KV);
+    const ip        = request.headers.get('CF-Connecting-IP') || '0.0.0.0';
+    const eventName = (env.EVENT_NAME || 'aao-event').replace(/[^a-z0-9]/gi, '-').toLowerCase();
+    const ipHash    = await hashIp(ip);
+    const count     = await getRateCount(ip, eventName, env.RATE_LIMIT_KV);
 
     if (count >= RATE_LIMIT_MAX) {
+      await structuredLog('warn', 'rate_limited', { eventName, ipHash });
       return json(
         { error: 'Too many attempts. Please wait 15 minutes.', retriesLeft: 0 },
         429,
@@ -245,11 +356,12 @@ export default {
     try {
       turnstileOk = await verifyTurnstile(turnstileToken, env.TURNSTILE_SECRET, ip);
     } catch (err) {
-      console.error('[aao-event-gate] Turnstile verification error:', err);
+      await structuredLog('error', 'turnstile_error', { eventName, ipHash, message: String(err) });
       return json({ error: 'Security check verification failed. Please try again.' }, 503, cors);
     }
 
     if (!turnstileOk) {
+      await structuredLog('warn', 'turnstile_failed', { eventName, ipHash });
       return json({ error: 'Security check failed. Please complete the challenge and try again.' }, 403, cors);
     }
 
@@ -260,20 +372,21 @@ export default {
       const submittedHash = await deriveCodeHash(code);
       match = await constantTimeEqual(submittedHash, env.EVENT_CODE_HASH);
     } catch (err) {
-      console.error('[aao-event-gate] Hash derivation error:', err);
+      await structuredLog('error', 'hash_error', { eventName, ipHash, message: String(err) });
       return json({ error: 'Internal error during verification.' }, 500, cors);
     }
 
     if (!match) {
-      const newCount    = await incrementRateLimit(ip, env.RATE_LIMIT_KV);
+      const newCount    = await incrementRateLimit(ip, eventName, env.RATE_LIMIT_KV);
       const retriesLeft = Math.max(0, RATE_LIMIT_MAX - newCount);
+      await structuredLog('info', 'auth_failure', { eventName, ipHash, retriesLeft });
       return json({ error: 'Incorrect event code.', retriesLeft }, 401, cors);
     }
 
     // ── Auth success ─────────────────────────────────────────────────────────
 
     // Clear rate limit counter — a successful auth resets the window
-    await clearRateLimit(ip, env.RATE_LIMIT_KV);
+    await clearRateLimit(ip, eventName, env.RATE_LIMIT_KV);
 
     const ttlHours = Math.min(Math.max(parseInt(env.TTL_HOURS || '8', 10), 1), 72);
     const now      = Math.floor(Date.now() / 1000);
@@ -286,14 +399,16 @@ export default {
           iat:   now,
           exp:   now + ttlHours * 3600,
           event: env.EVENT_NAME || 'aao-event',
+          scope: env.TOOL_SCOPE || 'default',  // #2: scope claim for tool-level isolation
         },
         env.JWT_SECRET
       );
     } catch (err) {
-      console.error('[aao-event-gate] JWT signing error:', err);
+      await structuredLog('error', 'jwt_error', { eventName, ipHash, message: String(err) });
       return json({ error: 'Internal error issuing session.' }, 500, cors);
     }
 
+    await structuredLog('info', 'auth_success', { eventName, ipHash });
     return json({ token }, 200, cors);
   },
 };

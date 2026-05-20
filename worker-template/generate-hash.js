@@ -44,6 +44,39 @@ if (code.length > 256) {
   process.exit(1);
 }
 
+// ── Basic strength check (non-blocking) ───────────────────────────────────────
+// Warns the operator if the code looks weak. Does NOT block hash generation.
+
+const WEAK_PATTERNS = [
+  /^[a-z]+$/i,          // single dictionary word
+  /^[0-9]+$/,           // all numbers
+  /^(.)\1+$/,           // repeated character (e.g. "aaaaaaa")
+  /^(password|secret|test|admin|aao|event|code|canvass|ohio|transit|letmein|opensesame|1234|qwerty)$/i,
+];
+
+const strengthWarnings = [];
+const trimmed = code.trim();
+
+if (trimmed.length < 8) {
+  strengthWarnings.push('Code is very short (less than 8 characters). Consider a longer phrase.');
+}
+for (const p of WEAK_PATTERNS) {
+  if (p.test(trimmed)) {
+    strengthWarnings.push('Code matches a common or trivially guessable pattern.');
+    break;
+  }
+}
+if (trimmed.split(/[-_ ]+/).filter(Boolean).length < 2) {
+  strengthWarnings.push('Tip: A two-word code (e.g. "cedar-rapids-2026") is easier to distribute and harder to guess.');
+}
+
+if (strengthWarnings.length > 0) {
+  console.log('');
+  console.log('  ⚠  Strength warnings:');
+  strengthWarnings.forEach(w => console.log(`     • ${w}`));
+  console.log('     The hash will still be generated — rotate the code if this is a concern.');
+}
+
 console.log('');
 console.log(`Deriving hash for event code... (this takes a moment)`);
 
